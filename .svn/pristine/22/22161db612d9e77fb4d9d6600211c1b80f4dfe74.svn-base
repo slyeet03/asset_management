@@ -1,0 +1,145 @@
+package com.fam.dao;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import com.fam.entity.AssetCategoryMaster;
+import com.fam.entity.Auditlog;
+import com.fam.values.ASSET_MANAGEMENTConstants;
+
+@SuppressWarnings({"static-access","unchecked"})
+@Repository
+public class AssetCategoryMasterDaoImpl implements AssetCategoryMasterDao{
+
+	
+	@PersistenceContext
+	private EntityManager entityManager; 
+	
+	@Autowired
+	AuditLogDaoImpl auditLogDaoImpl;
+	
+	@Override
+	public AssetCategoryMaster getAssetCategory(long recordid) {
+		String HSQL = "from AssetCategoryMaster where recordid=:recordid";
+		Query query = entityManager.createQuery(HSQL);
+		query.setParameter("recordid", recordid);
+	 return (AssetCategoryMaster) query.getResultList().get(0);
+	}
+
+	@Transactional
+	@Override
+	public void insertAssetCategory(AssetCategoryMaster assetCategoryMaster) {
+		entityManager.persist(assetCategoryMaster);
+		Auditlog auditlog = new Auditlog();		
+		auditlog.userid = assetCategoryMaster.getMakerid();
+		auditlog.userlevel = "Maker";
+		auditlog.logdate  = assetCategoryMaster.getMakerdate();
+		auditlog.logtime = assetCategoryMaster.getMakertime();
+		auditlog.logip = assetCategoryMaster.getMakerip();
+		auditlog.formname = "AssetCategory Master";
+		auditlog.eventname = "Insert";
+		auditlog.tablename = "catmast";
+		auditlog.qry = "Insert into catmast";
+		auditlog.param = "";
+		auditlog.remarks = "";
+		auditLogDaoImpl.addAuditLog(auditlog);
+		
+	}
+
+	@Transactional
+	@Override
+	public void updateAssetCategory(AssetCategoryMaster assetCategoryMaster) {
+		entityManager.merge(assetCategoryMaster);
+		Auditlog auditlog = new Auditlog();		
+		auditlog.userid = assetCategoryMaster.getMakerid();
+		auditlog.userlevel = "Maker";
+		auditlog.logdate  = assetCategoryMaster.getMakerdate();
+		auditlog.logtime = assetCategoryMaster.getMakertime();
+		auditlog.logip = assetCategoryMaster.getMakerip();
+		auditlog.formname = "AssetCategory Master";
+		auditlog.eventname = "Update";
+		auditlog.tablename = "catmast";
+		auditlog.qry = "Update catmast";
+		auditlog.param = "";
+		auditlog.remarks = "";
+		auditLogDaoImpl.addAuditLog(auditlog);
+		
+	}
+
+	@Override
+	public List<AssetCategoryMaster> getAssetCategorylist(String recstatus) {
+		String HSQL = "from AssetCategoryMaster where recstatus=:recstatus";
+		Query query = entityManager.createQuery(HSQL);
+		query.setParameter("recstatus", recstatus);
+		List<AssetCategoryMaster> ls = query.getResultList();
+		return ls;
+	}
+
+	@Transactional
+	@Override
+	public int updateAssetCategory(List<Long> recordids, String recstatus, Date date, String time, String userId,
+			String userIp, int userlevel) {
+			String HSQL = "Update AssetCategoryMaster set recstatus=:recstatus,";
+			if ((userlevel >= ASSET_MANAGEMENTConstants.userlevel_1 && userlevel <= ASSET_MANAGEMENTConstants.userlevel_5)|| 
+					(userlevel >= ASSET_MANAGEMENTConstants.userlevel_21 && userlevel <= ASSET_MANAGEMENTConstants.userlevel_25))
+			{
+				HSQL = HSQL+"makerdate=:currentDate,makertime=:currentTime,makerip=:userIp,makerid=:userId";
+			}
+			else if((userlevel >= ASSET_MANAGEMENTConstants.userlevel_6 && userlevel <= ASSET_MANAGEMENTConstants.userlevel_10)|| 
+					 (userlevel >= ASSET_MANAGEMENTConstants.userlevel_26 && userlevel <= ASSET_MANAGEMENTConstants.userlevel_30))
+			{
+				HSQL = HSQL+"checkerdate=:currentDate,checkertime=:currentTime,checkerip=:userIp,checkerid=:userId";
+			}
+			else{
+				HSQL = HSQL+"makerdate=:currentDate,makertime=:currentTime,makerip=:userIp,makerid=:userId";
+			}
+			HSQL = HSQL +" where recordid in :recordid";
+			Query query = entityManager.createQuery(HSQL);
+			query.setParameter("recstatus", recstatus);
+			query.setParameter("currentDate", date);
+			query.setParameter("currentTime", time);
+			query.setParameter("userIp", userIp);
+			query.setParameter("userId", userId);
+			query.setParameter("recordid", recordids);
+		    int numberOFRecordsUpdated=query.executeUpdate();
+		    Auditlog auditlog = new Auditlog();		
+			auditlog.userid = userId;
+			auditlog.userlevel = "Checker";
+			auditlog.logdate  = date;
+			auditlog.logtime = time;
+			auditlog.logip = userIp;
+			auditlog.formname = "AssetCategory Master";
+			auditlog.eventname = "Update";
+			auditlog.tablename = "catmast";
+			auditlog.qry = "Update recstatus in catmast";
+			auditlog.param = "recordids="+recordids+",recstatus="+recstatus;
+			auditlog.remarks = "";
+			auditLogDaoImpl.addAuditLog(auditlog);
+			return numberOFRecordsUpdated;
+	}
+
+	
+	@Override
+	public String getAssetCategoryCode() {
+		String HSQL = "select COALESCE(max(CAST(assetcategorycode as numeric)),0)+1  as assetcatcode from catmast";
+		String maxcode =  entityManager.createNativeQuery(HSQL).getResultList().get(0).toString();
+		return maxcode;
+	}
+
+	@Override
+	public List<AssetCategoryMaster> getAssetCatByBranch(String branchcode) {
+				String HSQL = "from AssetCategoryMaster where assetcategorycode not in (select categoryid from CategoryAccountDetails where recstatus!='99' and assetbranch=:assetbranch)";
+				Query query = entityManager.createQuery(HSQL);
+				query.setParameter("assetbranch", branchcode);
+				List<AssetCategoryMaster> ls = query.getResultList();
+				return ls;
+	}
+}

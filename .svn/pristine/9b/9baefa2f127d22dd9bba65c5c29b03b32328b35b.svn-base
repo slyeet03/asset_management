@@ -1,0 +1,58 @@
+package com.fam.service;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fam.dao.AssetCategoryMasterDao;
+import com.fam.entity.AssetCategoryMaster;
+
+@Service
+public class AssetCategoryMasterServiceImpl implements AssetCategoryMasterService{
+
+	@Autowired
+	AssetCategoryMasterDao assetCategoryMasterDao;
+	
+	@Override
+	public AssetCategoryMaster getAssetCategory(long recordid) {
+		
+		return assetCategoryMasterDao.getAssetCategory(recordid);
+	}
+
+	@Override
+	public void insertAssetCategory(AssetCategoryMaster assetCategoryMaster) {
+		assetCategoryMasterDao.insertAssetCategory(assetCategoryMaster);
+		
+	}
+
+	@Override
+	public void updateAssetCategory(AssetCategoryMaster assetCategoryMaster) {
+		assetCategoryMasterDao.updateAssetCategory(assetCategoryMaster);
+		
+	}
+
+	@Override
+	public List<AssetCategoryMaster> getAssetCategorylist(String recstatus) {
+		return assetCategoryMasterDao.getAssetCategorylist(recstatus);
+	}
+
+	@Override
+	public int updateAssetCategory(List<Long> recordids, String recstatus, Date date, String time, String userId,
+			String userIp, int userlevel) {
+		return assetCategoryMasterDao.updateAssetCategory(recordids, recstatus, date, time, userId, userIp, userlevel);
+	}
+
+	@Override
+	public String getAssetCategoryCode() {
+		return assetCategoryMasterDao.getAssetCategoryCode();
+	}
+
+	@Override
+	public List<AssetCategoryMaster> getAssetCatByBranch(String branchcode){
+		return assetCategoryMasterDao.getAssetCatByBranch(branchcode);
+	}
+
+
+}

@@ -1,0 +1,735 @@
+/*!
+ * Nestable jQuery Plugin - Copyright (c) 2012 David Bushell - http://dbushell.com/
+ * Dual-licensed under the BSD or MIT licenses
+ */
+;(function($, window, document, undefined)
+{
+
+    var hasTouch = 'ontouchstart' in window;
+
+    /**
+     * Detect CSS pointer-events property
+     * events are normally disabled on the dragging element to avoid conflicts
+     * https://github.com/ausi/Feature-detection-technique-for-pointer-events/blob/master/modernizr-pointerevents.js
+     */
+    var hasPointerEvents = (function()
+    {
+        var el    = document.createElement('div'),
+            docEl = document.documentElement;
+        if (!('pointerEvents' in el.style)) {
+            return false;
+        }
+        el.style.pointerEvents = 'auto';
+        el.style.pointerEvents = 'x';
+        docEl.appendChild(el);
+        var supports = window.getComputedStyle && window.getComputedStyle(el, '').pointerEvents === 'auto';
+        docEl.removeChild(el);
+        return !!supports;
+    })();
+
+    var eStart  = hasTouch ? 'touchstart'  : 'mousedown',
+        eMove   = hasTouch ? 'touchmove'   : 'mousemove',
+        eEnd    = hasTouch ? 'touchend'    : 'mouseup';
+        eCancel = hasTouch ? 'touchcancel' : 'mouseup';
+
+    var defaults = {
+            listNodeName    : 'ol',
+            itemNodeName    : 'li',
+            rootClass       : 'dd',
+            listClass       : 'dd-list',
+            itemClass       : 'dd-item',
+            dragClass       : 'dd-dragel',
+            handleClass     : 'dd-handle',
+            collapsedClass  : 'dd-collapsed',
+            placeClass      : 'dd-placeholder',
+            noDragClass     : 'dd-nodrag',
+            emptyClass      : 'dd-empty',
+            expandBtnHTML   : '<button data-action="expand" type="button">Expand</button>',
+            collapseBtnHTML : '<button data-action="collapse" type="button">Collapse</button>',
+            group           : 0,
+            maxDepth        : 5,
+            threshold       : 20
+        };
+
+    function Plugin(element, options)
+    {
+        this.w  = $(window);
+        this.el = $(element);
+        this.options = $.extend({}, defaults, options);
+        this.init();
+    }
+
+    Plugin.prototype = {
+
+        init: function()
+        {
+            var list = this;
+
+            list.reset();
+
+            list.el.data('nestable-group', this.options.group);
+
+            list.placeEl = $('<div class="' + list.options.placeClass + '"/>');
+
+            $.each(this.el.find(list.options.itemNodeName), function(k, el) {
+                list.setParent($(el));
+            });
+
+            list.el.on('click', 'button', function(e) {
+                if (list.dragEl || (!hasTouch && e.button !== 0)) {
+                    return;
+                }
+                var target = $(e.currentTarget),
+                    action = target.data('action'),
+                    item   = target.parent(list.options.itemNodeName);
+                if (action === 'collapse') {
+                    list.collapseItem(item);
+                }
+                if (action === 'expand') {
+                    list.expandItem(item);
+                }
+            });
+
+            var onStartEvent = function(e)
+            {
+                var handle = $(e.target);
+                if (!handle.hasClass(list.options.handleClass)) {
+                    if (handle.closest('.' + list.options.noDragClass).length) {
+                        return;
+                    }
+                    handle = handle.closest('.' + list.options.handleClass);
+                }
+                if (!handle.length || list.dragEl || (!hasTouch && e.button !== 0) || (hasTouch && e.touches.length !== 1)) {
+                    return;
+                }
+                e.preventDefault();
+                list.dragStart(hasTouch ? e.touches[0] : e);
+            };
+
+            var onMoveEvent = function(e)
+            {
+                if (list.dragEl) {
+                    e.preventDefault();
+                    list.dragMove(hasTouch ? e.touches[0] : e);
+                }
+            };
+
+            var onEndEvent = function(e)
+            {
+                if (list.dragEl) {
+                    e.preventDefault();
+                    list.dragStop(hasTouch ? e.touches[0] : e);
+                }
+            };
+
+            if (hasTouch) {
+                list.el[0].addEventListener(eStart, onStartEvent, false);
+                window.addEventListener(eMove, onMoveEvent, false);
+                window.addEventListener(eEnd, onEndEvent, false);
+                window.addEventListener(eCancel, onEndEvent, false);
+            } else {
+                list.el.on(eStart, onStartEvent);
+                list.w.on(eMove, onMoveEvent);
+                list.w.on(eEnd, onEndEvent);
+            }
+
+        },
+
+        serialize: function()
+        {
+            var data,
+                depth = 0,
+                list  = this;
+                step  = function(level, depth)
+                {
+                    var array = [ ],
+                        items = level.children(list.options.itemNodeName);
+                    items.each(function()
+                    {
+                        var li   = $(this),
+                            item = $.extend({}, li.data()),
+                            sub  = li.children(list.options.listNodeName);
+                        if (sub.length) {
+                            item.children = step(sub, depth + 1);
+                        }
+                        array.push(item);
+                    });
+                    return array;
+                };
+            data = step(list.el.find(list.options.listNodeName).first(), depth);
+            return data;
+        },
+
+        serialise: function()
+        {
+            return this.serialize();
+        },
+
+        reset: function()
+        {
+            this.mouse = {
+                offsetX   : 0,
+                offsetY   : 0,
+                startX    : 0,
+                startY    : 0,
+                lastX     : 0,
+                lastY     : 0,
+                nowX      : 0,
+                nowY      : 0,
+                distX     : 0,
+                distY     : 0,
+                dirAx     : 0,
+                dirX      : 0,
+                dirY      : 0,
+                lastDirX  : 0,
+                lastDirY  : 0,
+                distAxX   : 0,
+                distAxY   : 0
+            };
+            this.moving     = false;
+            this.dragEl     = null;
+            this.dragRootEl = null;
+            this.dragDepth  = 0;
+            this.hasNewRoot = false;
+            this.pointEl    = null;
+        },
+
+        expandItem: function(li)
+        {
+            li.removeClass(this.options.collapsedClass);
+            li.children('[data-action="expand"]').hide();
+            var main ='';
+            var grup = '';
+        	var subgrup ='';
+        	var subgrup1 = '';
+        	var subgrup2 = '';
+        	if(li.children('ol').html().trim().length <=0){
+        		var ol = li.children('ol');
+        		var data;
+        		li.find('input').each(function(){
+            		var id = $(this).attr('id');
+            		if(id=="grup"){
+                		grup = $(this).val();
+                	}
+                	else if(id=="subgrup"){
+                		subgrup = $(this).val();
+                	}
+                	else if(id=="subgrup1"){
+                		subgrup1 = $(this).val();
+                	}else if(id=="subgrup2"){
+                		subgrup2 = $(this).val();
+                	}
+                	else if(id=="main"){
+                		main = $(this).val();
+                	}
+                });
+        		var id=0;
+        		
+        		if((subgrup1.trim().length<=0)&&(subgrup2.trim().length<=0)){
+                	data = {main:main,grup:grup,subgrup:subgrup,paratype:"subgrup1"};
+                	id=1;
+                	
+                }else if((subgrup2.trim().length<=0)){
+                	data = {main:main,grup:grup,subgrup:subgrup,subgrup1:subgrup1,paratype:"subgrup2"};
+                	id=2; 
+                }else{
+                	data = {main:main,grup:grup,subgrup:subgrup,subgrup1:subgrup1,subgrup2:subgrup2,paratype:"subgrup3"};
+                	id=3;
+                }
+                $.ajax({
+            		type : "POST",
+            		url : "getSubGroupDetail.html",
+            		data:data,
+            		async:false,
+            		error : function(xhr, status, error) {
+            			window.location="login.html?statusCheck=SessionExpired";
+            		},
+            		beforeSend : function() {},
+            		success : function(response) {
+            			var data = jQuery.parseJSON(response);
+            			var element = '';
+            			if(data.error == "false"){
+            				for(var i =0; i < data.SubGroupList.length;i++ ){
+        						element = element+'<li class="dd-item" data-id="3"><div class="dd-handle"><p class="bold text-wrap text-left"><i class="fa fa-trash p-r-5" style="cursor: pointer;"></i><i class="fa fa-edit p-r-5" style="cursor: pointer;"></i>';
+        						var amount = Number(data.SubGroupList[i][6]);
+        						if(id==1){
+        							element = element+'<input type="hidden" id="main" value="'+main+'" /><input type="hidden" id="grup" value="'+grup+'" /><input type="hidden" id="subgrup" value="'+subgrup+'" /><input type="hidden" id="subgrup1" value="'+data.SubGroupList[i][1]+'" />'+data.SubGroupList[i][4]+'<span class="pull-right p-r-5">'+amount.toFixed(2)+'</span></p></div>';
+        							if(parseInt(data.SubGroupList[i][5]) >1){
+        								element = element+'<ol class="dd-list"></ol>';
+        							}
+        							element = element+'</li>';
+        						}
+        						else if (id==2){
+        							
+        							element = element+'<input type="hidden" id="main" value="'+main+'" /><input type="hidden" id="grup" value="'+grup+'" /><input type="hidden" id="subgrup" value="'+subgrup+'" /><input type="hidden" id="subgrup1" value="'+subgrup1+'" /><input type="hidden" id="subgrup2" value="'+data.SubGroupList[i][2]+'" />'+data.SubGroupList[i][4]+'<span class="pull-right p-r-15 ">'+amount.toFixed(2)+'</p></span></div>';
+        							if(parseInt(data.SubGroupList[i][5]) >1){
+        								element = element+'<ol class="dd-list"></ol>';
+        							}
+        							element = element+'</li>';
+        						}
+        						else{
+        							element = element+'<input type="hidden" id="main" value="'+main+'" /><input type="hidden" id="grup" value="'+grup+'" /><input type="hidden" id="subgrup" value="'+subgrup+'" /><input type="hidden" id="subgrup1" value="'+subgrup1+'" /><input type="hidden" id="subgrup2" value="'+subgrup2+'" /><input type="hidden" id="subgrup3" value="'+data.SubGroupList[i][3]+'" />'+data.SubGroupList[i][4]+'<span class="pull-right p-r-30 ">'+amount.toFixed(2)+'</p></span></div></li>';
+        						}
+        					}
+            				ol.html(element);
+            				//Remove Edit From All Existing fa-edit
+            				$('.fa-edit').each(function(){
+            					$(this).off('click');
+    						});
+            				$('.fa-trash').on("click",function(){
+            					$(this).off('click');
+            				});
+            				//Add Edit to fa-edit
+    						$('.fa-edit').each(function(){
+    							$(this).on('click',function(){
+    								e(this);
+    								
+    							});
+    						});
+    						$('.fa-trash').each(function(){
+    							$(this).on('click',function(){
+    								deleted(this);
+    								
+    							});
+    						});
+            			}
+            			setTimeout(function(){
+//            				$('#blockUI').modal("hide");
+            			}, 1000);
+            		},
+            		complete : function() {
+            			if(main == "BS"){
+            				// Save The State of Li at data-id=1 BS
+            				var ids=[];
+            				$('ol').children('li').each(function(){
+                				var id = parseInt($(this).attr('data-id'));
+                				var id1 = $(this).attr('id');
+                				if(!isNaN(id)){
+                					if(id==1){
+                						$(this).children('button').each(function(){
+                							var display = $(this).css('display');
+                							var action = $(this).attr('data-action');
+                            				if((display != "none") && action == "expand"){
+                            					if(id1.indexOf("B")>=0){
+                									ids.push(id1);
+                								}
+                							}
+                						});
+                					}
+                				}
+                			});
+            				// Reinitialized in order to add the ajax element to list
+            				$('#basic_example').nestable('reinit');
+            				$(".dd-handle").on("click", function(event) { 
+            					event.preventDefault();
+            					return false;
+            					});
+            				$(".dd-handle").on("mousedown", function(event) {
+            					event.preventDefault();
+            					return false;
+            					});
+            				$.each(ids,function(i){
+            					var id ='#'+ids[i];
+            					$(id).children('button').each(function(){
+            						var action = $(this).attr('data-action');
+            						if(action == "collapse"){
+                    					$(this).hide();
+                    				}else{
+                    					$(this).show();
+                    				}
+            					});
+            				});
+            				
+            			}else{
+            				var ids=[];
+            				// Save The State of Li at data-id=1 BS
+            				$('ol').children('li').each(function(){
+                				var id = parseInt($(this).attr('data-id'));
+                				var id1 = $(this).attr('id');
+                				if(!isNaN(id)){
+                					if(id==1){
+                						$(this).children('button').each(function(){
+                							var display = $(this).css('display');
+                							var action = $(this).attr('data-action');
+                            				if((display != "none") && action == "expand"){
+                            					if(id1.indexOf("P")>=0){
+                									ids.push(id1);
+                								}
+                							}
+                						});
+                					}
+                				}
+                			});
+            				$('#basic_example1').nestable('reinit');
+            				$(".dd-handle").on("click", function(event) { 
+            					event.preventDefault();
+            					return false;
+            					});
+            				$(".dd-handle").on("mousedown", function(event) {
+            					event.preventDefault();
+            					return false;
+            					});
+            				$.each(ids,function(i){
+            					var id ='#'+ids[i];
+            					$(id).children('button').each(function(){
+            						var action = $(this).attr('data-action');
+            						if(action == "collapse"){
+                    					$(this).hide();
+                    				}else{
+                    					$(this).show();
+                    				}
+            					});
+            				});
+            			}
+            			
+            			// Display + sign for all the elements added on ajax
+            			ol.children('li').children('button').each(function(){
+            				var action = $(this).attr('data-action');
+            				if(action == "collapse"){
+            					$(this).hide();
+            				}else{
+            					$(this).show();
+            				}
+            			});
+            		}
+            	});
+        	}
+        	
+        	//Fo All OL list having (no content or no sub list) should show +
+            $('ol').children('li').each(function(){
+            	try{
+            		if(!($(this).children('ol').html().trim().length > 0)){
+                		$(this).children('button').each(function(){
+                			var action = $(this).attr('data-action');
+                			if(action == "collapse"){
+            					$(this).hide();
+            				}else{
+            					$(this).show();
+            				}
+                		});
+                	}	
+            	}catch(e){}
+            });
+            li.children('[data-action="collapse"]').show();
+            li.children(this.options.listNodeName).show();
+        },
+
+        collapseItem: function(li)
+        {
+            var lists = li.children(this.options.listNodeName);
+            if (lists.length) {
+                li.addClass(this.options.collapsedClass);
+                li.children('[data-action="collapse"]').hide();
+                li.children('[data-action="expand"]').show();
+//                li.children(this.options.listNodeName).hide();
+                li.children(this.options.listNodeName).each(function(){
+                	var id = parseInt($(li).attr('data-id'));
+                	if(!isNaN(id)){
+                		if(id>1){
+                			$(this).html('');
+                		}
+                	}
+                });
+            }
+        },
+
+        expandAll: function()
+        {
+            var list = this;
+            list.el.find(list.options.itemNodeName).each(function() {
+                list.expandItem($(this));
+            });
+        },
+
+        collapseAll: function()
+        {
+            var list = this;
+            list.el.find(list.options.itemNodeName).each(function() {
+                list.collapseItem($(this));
+            });
+        },
+
+        setParent: function(li)
+        {
+            if (li.children(this.options.listNodeName).length) {
+                li.prepend($(this.options.expandBtnHTML));
+                li.prepend($(this.options.collapseBtnHTML));
+            }
+            li.children('[data-action="expand"]').hide();
+        },
+
+        unsetParent: function(li)
+        {
+            li.removeClass(this.options.collapsedClass);
+            li.children('[data-action]').remove();
+            li.children(this.options.listNodeName).remove();
+        },
+
+        dragStart: function(e)
+        {
+            var mouse    = this.mouse,
+                target   = $(e.target),
+                dragItem = target.closest(this.options.itemNodeName);
+
+            this.placeEl.css('height', dragItem.height());
+
+            mouse.offsetX = e.offsetX !== undefined ? e.offsetX : e.pageX - target.offset().left;
+            mouse.offsetY = e.offsetY !== undefined ? e.offsetY : e.pageY - target.offset().top;
+            mouse.startX = mouse.lastX = e.pageX;
+            mouse.startY = mouse.lastY = e.pageY;
+
+            this.dragRootEl = this.el;
+
+            this.dragEl = $(document.createElement(this.options.listNodeName)).addClass(this.options.listClass + ' ' + this.options.dragClass);
+            this.dragEl.css('width', dragItem.width());
+
+            // fix for zepto.js
+            //dragItem.after(this.placeEl).detach().appendTo(this.dragEl);
+            dragItem.after(this.placeEl);
+            dragItem[0].parentNode.removeChild(dragItem[0]);
+            dragItem.appendTo(this.dragEl);
+
+            $(document.body).append(this.dragEl);
+            this.dragEl.css({
+                'left' : e.pageX - mouse.offsetX,
+                'top'  : e.pageY - mouse.offsetY
+            });
+            // total depth of dragging item
+            var i, depth,
+                items = this.dragEl.find(this.options.itemNodeName);
+            for (i = 0; i < items.length; i++) {
+                depth = $(items[i]).parents(this.options.listNodeName).length;
+                if (depth > this.dragDepth) {
+                    this.dragDepth = depth;
+                }
+            }
+        },
+
+        dragStop: function(e)
+        {
+            // fix for zepto.js
+            //this.placeEl.replaceWith(this.dragEl.children(this.options.itemNodeName + ':first').detach());
+            var el = this.dragEl.children(this.options.itemNodeName).first();
+            el[0].parentNode.removeChild(el[0]);
+            this.placeEl.replaceWith(el);
+
+            this.dragEl.remove();
+            this.el.trigger('change');
+            if (this.hasNewRoot) {
+                this.dragRootEl.trigger('change');
+            }
+            this.reset();
+        },
+
+        dragMove: function(e)
+        {
+            var list, parent, prev, next, depth,
+                opt   = this.options,
+                mouse = this.mouse;
+
+            this.dragEl.css({
+                'left' : e.pageX - mouse.offsetX,
+                'top'  : e.pageY - mouse.offsetY
+            });
+
+            // mouse position last events
+            mouse.lastX = mouse.nowX;
+            mouse.lastY = mouse.nowY;
+            // mouse position this events
+            mouse.nowX  = e.pageX;
+            mouse.nowY  = e.pageY;
+            // distance mouse moved between events
+            mouse.distX = mouse.nowX - mouse.lastX;
+            mouse.distY = mouse.nowY - mouse.lastY;
+            // direction mouse was moving
+            mouse.lastDirX = mouse.dirX;
+            mouse.lastDirY = mouse.dirY;
+            // direction mouse is now moving (on both axis)
+            mouse.dirX = mouse.distX === 0 ? 0 : mouse.distX > 0 ? 1 : -1;
+            mouse.dirY = mouse.distY === 0 ? 0 : mouse.distY > 0 ? 1 : -1;
+            // axis mouse is now moving on
+            var newAx   = Math.abs(mouse.distX) > Math.abs(mouse.distY) ? 1 : 0;
+
+            // do nothing on first move
+            if (!mouse.moving) {
+                mouse.dirAx  = newAx;
+                mouse.moving = true;
+                return;
+            }
+
+            // calc distance moved on this axis (and direction)
+            if (mouse.dirAx !== newAx) {
+                mouse.distAxX = 0;
+                mouse.distAxY = 0;
+            } else {
+                mouse.distAxX += Math.abs(mouse.distX);
+                if (mouse.dirX !== 0 && mouse.dirX !== mouse.lastDirX) {
+                    mouse.distAxX = 0;
+                }
+                mouse.distAxY += Math.abs(mouse.distY);
+                if (mouse.dirY !== 0 && mouse.dirY !== mouse.lastDirY) {
+                    mouse.distAxY = 0;
+                }
+            }
+            mouse.dirAx = newAx;
+
+            /**
+             * move horizontal
+             */
+            if (mouse.dirAx && mouse.distAxX >= opt.threshold) {
+                // reset move distance on x-axis for new phase
+                mouse.distAxX = 0;
+                prev = this.placeEl.prev(opt.itemNodeName);
+                // increase horizontal level if previous sibling exists and is not collapsed
+                if (mouse.distX > 0 && prev.length && !prev.hasClass(opt.collapsedClass)) {
+                    // cannot increase level when item above is collapsed
+                    list = prev.find(opt.listNodeName).last();
+                    // check if depth limit has reached
+                    depth = this.placeEl.parents(opt.listNodeName).length;
+                    if (depth + this.dragDepth <= opt.maxDepth) {
+                        // create new sub-level if one doesn't exist
+                        if (!list.length) {
+                            list = $('<' + opt.listNodeName + '/>').addClass(opt.listClass);
+                            list.append(this.placeEl);
+                            prev.append(list);
+                            this.setParent(prev);
+                        } else {
+                            // else append to next level up
+                            list = prev.children(opt.listNodeName).last();
+                            list.append(this.placeEl);
+                        }
+                    }
+                }
+                // decrease horizontal level
+                if (mouse.distX < 0) {
+                    // we can't decrease a level if an item preceeds the current one
+                    next = this.placeEl.next(opt.itemNodeName);
+                    if (!next.length) {
+                        parent = this.placeEl.parent();
+                        this.placeEl.closest(opt.itemNodeName).after(this.placeEl);
+                        if (!parent.children().length) {
+                            this.unsetParent(parent.parent());
+                        }
+                    }
+                }
+            }
+
+            var isEmpty = false;
+
+            // find list item under cursor
+            if (!hasPointerEvents) {
+                this.dragEl[0].style.visibility = 'hidden';
+            }
+            this.pointEl = $(document.elementFromPoint(e.pageX - document.body.scrollLeft, e.pageY - (window.pageYOffset || document.documentElement.scrollTop)));
+            if (!hasPointerEvents) {
+                this.dragEl[0].style.visibility = 'visible';
+            }
+            if (this.pointEl.hasClass(opt.handleClass)) {
+                this.pointEl = this.pointEl.parent(opt.itemNodeName);
+            }
+            if (this.pointEl.hasClass(opt.emptyClass)) {
+                isEmpty = true;
+            }
+            else if (!this.pointEl.length || !this.pointEl.hasClass(opt.itemClass)) {
+                return;
+            }
+
+            // find parent list of item under cursor
+            var pointElRoot = this.pointEl.closest('.' + opt.rootClass),
+                isNewRoot   = this.dragRootEl.data('nestable-id') !== pointElRoot.data('nestable-id');
+
+            /**
+             * move vertical
+             */
+            if (!mouse.dirAx || isNewRoot || isEmpty) {
+                // check if groups match if dragging over new root
+                if (isNewRoot && opt.group !== pointElRoot.data('nestable-group')) {
+                    return;
+                }
+                // check depth limit
+                depth = this.dragDepth - 1 + this.pointEl.parents(opt.listNodeName).length;
+                if (depth > opt.maxDepth) {
+                    return;
+                }
+                var before = e.pageY < (this.pointEl.offset().top + this.pointEl.height() / 2);
+                    parent = this.placeEl.parent();
+                // if empty create new list to replace empty placeholder
+                if (isEmpty) {
+                    list = $(document.createElement(opt.listNodeName)).addClass(opt.listClass);
+                    list.append(this.placeEl);
+                    this.pointEl.replaceWith(list);
+                }
+                else if (before) {
+                    this.pointEl.before(this.placeEl);
+                }
+                else {
+                    this.pointEl.after(this.placeEl);
+                }
+                if (!parent.children().length) {
+                    this.unsetParent(parent.parent());
+                }
+                if (!this.dragRootEl.find(opt.itemNodeName).length) {
+                    this.dragRootEl.append('<div class="' + opt.emptyClass + '"/>');
+                }
+                // parent root list has changed
+                if (isNewRoot) {
+                    this.dragRootEl = pointElRoot;
+                    this.hasNewRoot = this.el[0] !== this.dragRootEl[0];
+                }
+            }
+        },
+        reinit: function() {
+            // alias
+            var list = this;
+
+            // remove expand/collapse controls
+            $.each(this.el.find(this.options.itemNodeName), function(k, el) {
+                // if has <ol> child - remove previously prepended buttons
+                if ($(el).children(list.options.listNodeName).length) {
+                    $(el).children('button').remove();
+                }
+            });
+
+            // remove delegated event handlers
+            list.el.off('click', 'button');
+
+            var hasTouch = 'ontouchstart' in document;
+            if (hasTouch) {
+                list.el.off('touchstart');
+                list.w.off('touchmove');
+                list.w.off('touchend');
+                list.w.off('touchcancel');
+            }
+
+            list.el.off('mousedown');
+            list.w.off('mousemove');
+            list.w.off('mouseup');
+            
+            // call init again
+            list.init();
+        }
+    };
+
+    $.fn.nestable = function(params)
+    {
+        var lists  = this,
+            retval = this;
+
+        lists.each(function()
+        {
+            var plugin = $(this).data("nestable");
+
+            if (!plugin) {
+                $(this).data("nestable", new Plugin(this, params));
+                $(this).data("nestable-id", new Date().getTime());
+            } else {
+                if (typeof params === 'string' && typeof plugin[params] === 'function') {
+                    retval = plugin[params]();
+                }
+            }
+        });
+
+        return retval || lists;
+    };
+    
+})(window.jQuery || window.Zepto, window, document);

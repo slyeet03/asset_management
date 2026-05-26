@@ -1,0 +1,46 @@
+html {   
+    height: 100%;  
+      
+}  
+body {   
+    height: 100%;
+   
+}  
+.global-container {  
+    height: 100%;  
+    display: flex;  
+    align-items: center;  
+    justify-content: center; 
+     background-color: #80ffff;  
+      background-size: cover;  
+    background-image: linear-gradient(to right,#80ffff,#ba1e9b ); 
+}  
+form {  
+    padding-top: 10px;  
+    font-size: 14px;  
+    margin-top: 30px;  
+}  
+.card-title {   
+font-weight: 300;  
+ }  
+.btn {  
+    font-size: 14px;  
+    margin-top: 20px;  
+}  
+.login-form {   
+    width: 330px;  
+    margin: 20px;  
+}  
+ 
+.alert {  
+    margin-bottom: -30px;  
+    font-size: 13px;  
+    margin-top: 20px;  
+}  
+
+h1 {
+  text-shadow: 2px 1px ;
+  font-family: Hawaii 5-0, Arial, Helvetica, sans-serif;
+  color:#400000;
+  font-size: 100px;
+}

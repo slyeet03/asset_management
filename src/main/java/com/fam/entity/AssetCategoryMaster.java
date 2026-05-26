@@ -1,0 +1,278 @@
+package com.fam.entity;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import org.springframework.stereotype.Component;
+
+@SuppressWarnings("serial")
+@Entity
+@Component
+@Table(name = "catmast", schema = "public")
+public class AssetCategoryMaster implements java.io.Serializable {
+	@Id
+	@SequenceGenerator(name = "catmast_sequence_generator", sequenceName = "catmast_recordid_seq", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "catmast_sequence_generator")
+	private Long recordid;
+	// private Long assetcategoryid;
+	private String assetcategorycode;
+	private String categorydescription;
+	private String categoryprefixcode;
+	private BigDecimal depriciationpercentage;
+	private Integer usefullife;
+	private String depreciationmethod;
+	private String recstatus;
+	private String userlevel;
+	private String rolename;
+	private String extra1;
+	private String makerid;
+	private Date makerdate;
+	private String makertime;
+	private String makerip;
+	private String checkerid;
+	private Date checkerdate;
+	private String checkertime;
+	private String checkerip;
+	private String approverid;
+	private Date approverdate;
+	private String approvertime;
+	private String approverip;
+
+	public AssetCategoryMaster() {
+
+	}
+
+	public AssetCategoryMaster(Long recordid, /* Long assetcategoryid, */ String assetcategorycode,
+			String categorydescription, String categoryprefixcode, BigDecimal depriciationpercentage,
+			Integer usefullife, String depreciationmethod, String recstatus, String userlevel, String rolename,
+			String extra1, String makerid, Date makerdate, String makertime, String makerip, String checkerid,
+			Date checkerdate, String checkertime, String checkerip, String approverid, Date approverdate,
+			String approvertime, String approverip) {
+		super();
+		this.recordid = recordid;
+		// this.assetcategoryid = assetcategoryid;
+		this.assetcategorycode = assetcategorycode;
+		this.categorydescription = categorydescription;
+		this.categoryprefixcode = categoryprefixcode;
+		this.depriciationpercentage = depriciationpercentage;
+		this.usefullife = usefullife;
+		this.depreciationmethod = depreciationmethod;
+		this.recstatus = recstatus;
+		this.userlevel = userlevel;
+		this.rolename = rolename;
+		this.extra1 = extra1;
+		this.makerid = makerid;
+		this.makerdate = makerdate;
+		this.makertime = makertime;
+		this.makerip = makerip;
+		this.checkerid = checkerid;
+		this.checkerdate = checkerdate;
+		this.checkertime = checkertime;
+		this.checkerip = checkerip;
+		this.approverid = approverid;
+		this.approverdate = approverdate;
+		this.approvertime = approvertime;
+		this.approverip = approverip;
+	}
+
+	public Long getRecordid() {
+		return recordid;
+	}
+
+	public void setRecordid(Long recordid) {
+		this.recordid = recordid;
+	}
+
+//	public Long getAssetcategoryid() {
+//		return assetcategoryid;
+//	}
+//
+//
+//	public void setAssetcategoryid(Long assetcategoryid) {
+//		this.assetcategoryid = assetcategoryid;
+//	}
+
+	public String getAssetcategorycode() {
+		return assetcategorycode;
+	}
+
+	public void setAssetcategorycode(String assetcategorycode) {
+		this.assetcategorycode = assetcategorycode;
+	}
+
+	public String getCategorydescription() {
+		return categorydescription;
+	}
+
+	public void setCategorydescription(String categorydescription) {
+		this.categorydescription = categorydescription;
+	}
+
+	public String getCategoryprefixcode() {
+		return categoryprefixcode;
+	}
+
+	public void setCategoryprefixcode(String categoryprefixcode) {
+		this.categoryprefixcode = categoryprefixcode;
+	}
+
+	public BigDecimal getDepriciationpercentage() {
+		return depriciationpercentage;
+	}
+
+	public void setDepriciationpercentage(BigDecimal depriciationpercentage) {
+		this.depriciationpercentage = depriciationpercentage;
+	}
+
+	public Integer getUsefullife() {
+		return usefullife;
+	}
+
+	public void setUsefullife(Integer usefullife) {
+		this.usefullife = usefullife;
+	}
+
+	public String getDepreciationmethod() {
+		return depreciationmethod;
+	}
+
+	public void setDepreciationmethod(String depreciationmethod) {
+		this.depreciationmethod = depreciationmethod;
+	}
+
+	public String getRecstatus() {
+		return recstatus;
+	}
+
+	public void setRecstatus(String recstatus) {
+		this.recstatus = recstatus;
+	}
+
+	public String getUserlevel() {
+		return userlevel;
+	}
+
+	public void setUserlevel(String userlevel) {
+		this.userlevel = userlevel;
+	}
+
+	public String getRolename() {
+		return rolename;
+	}
+
+	public void setRolename(String rolename) {
+		this.rolename = rolename;
+	}
+
+	public String getExtra1() {
+		return extra1;
+	}
+
+	public void setExtra1(String extra1) {
+		this.extra1 = extra1;
+	}
+
+	public String getMakerid() {
+		return makerid;
+	}
+
+	public void setMakerid(String makerid) {
+		this.makerid = makerid;
+	}
+
+	public Date getMakerdate() {
+		return makerdate;
+	}
+
+	public void setMakerdate(Date makerdate) {
+		this.makerdate = makerdate;
+	}
+
+	public String getMakertime() {
+		return makertime;
+	}
+
+	public void setMakertime(String makertime) {
+		this.makertime = makertime;
+	}
+
+	public String getMakerip() {
+		return makerip;
+	}
+
+	public void setMakerip(String makerip) {
+		this.makerip = makerip;
+	}
+
+	public String getCheckerid() {
+		return checkerid;
+	}
+
+	public void setCheckerid(String checkerid) {
+		this.checkerid = checkerid;
+	}
+
+	public Date getCheckerdate() {
+		return checkerdate;
+	}
+
+	public void setCheckerdate(Date checkerdate) {
+		this.checkerdate = checkerdate;
+	}
+
+	public String getCheckertime() {
+		return checkertime;
+	}
+
+	public void setCheckertime(String checkertime) {
+		this.checkertime = checkertime;
+	}
+
+	public String getCheckerip() {
+		return checkerip;
+	}
+
+	public void setCheckerip(String checkerip) {
+		this.checkerip = checkerip;
+	}
+
+	public String getApproverid() {
+		return approverid;
+	}
+
+	public void setApproverid(String approverid) {
+		this.approverid = approverid;
+	}
+
+	public Date getApproverdate() {
+		return approverdate;
+	}
+
+	public void setApproverdate(Date approverdate) {
+		this.approverdate = approverdate;
+	}
+
+	public String getApprovertime() {
+		return approvertime;
+	}
+
+	public void setApprovertime(String approvertime) {
+		this.approvertime = approvertime;
+	}
+
+	public String getApproverip() {
+		return approverip;
+	}
+
+	public void setApproverip(String approverip) {
+		this.approverip = approverip;
+	}
+
+}

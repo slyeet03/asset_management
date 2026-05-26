@@ -1,0 +1,12 @@
+server.port=8008
+
+spring.mvc.view.prefix=/WEB-INF/
+spring.mvc.view.suffix=.jsp
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/ASSET_MANAGEMENT
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=update

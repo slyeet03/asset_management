@@ -1,0 +1,343 @@
+package com.fam.entity;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import org.springframework.stereotype.Component;
+
+@SuppressWarnings("serial")
+@Entity
+@Component
+@Table(name = "categoryaccntdetails", schema = "public")
+public class CategoryAccountDetails implements java.io.Serializable {
+       @Id
+ 	  @SequenceGenerator(name = "categoryaccntdetails_sequence_generator", sequenceName = "categoryaccntdetails_recordid_seq",allocationSize = 1)
+ 	  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "categoryaccntdetails_sequence_generator")
+		private long recordid;
+		//private long accntdetailsid;
+		private String assetbranch;
+		private String assetdepartment;
+		private String categoryid;
+		private String bglidforasset;
+		private String bglidforloss;
+		private String bglidforprofit;
+		private String bglidfordepreciation;
+		private String bglidforsuspended;
+		private String remark;
+		private String extra1;
+		private String recstatus;
+		private String userlevel;
+		private String rolename;
+		private String makerid;
+		private Date makerdate;
+		private String makertime;
+		private String makerip;
+		private String checkerid;
+		private Date checkerdate;
+		private String checkertime;
+		private String checkerip;
+		private String approverid;
+		private Date approverdate;
+		private String approvertime;
+		private String approverip;
+		
+		public CategoryAccountDetails() {
+		}
+		
+		public CategoryAccountDetails(Long recordid, Long accntdetailsid, String assetbranch, String assetdepartment,
+				String categoryid, String bglidforasset, String bglidforloss, String bglidforprofit,
+				String bglidfordepreciation, String bglidforsuspended, String remark, String extra1, String recstatus,
+				String userlevel, String rolename, String makerid, Date makerdate, String makertime, String makerip,
+				String checkerid, Date checkerdate, String checkertime, String checkerip, String approverid,
+				Date approverdate, String approvertime, String approverip) {
+			super();
+			this.recordid = recordid;
+			//this.accntdetailsid = accntdetailsid;
+			this.assetbranch = assetbranch;
+			this.assetdepartment = assetdepartment;
+			this.categoryid = categoryid;
+			this.bglidforasset = bglidforasset;
+			this.bglidforloss = bglidforloss;
+			this.bglidforprofit = bglidforprofit;
+			this.bglidfordepreciation = bglidfordepreciation;
+			this.bglidforsuspended = bglidforsuspended;
+			this.remark = remark;
+			this.extra1 = extra1;
+			this.recstatus = recstatus;
+			this.userlevel = userlevel;
+			this.rolename = rolename;
+			this.makerid = makerid;
+			this.makerdate = makerdate;
+			this.makertime = makertime;
+			this.makerip = makerip;
+			this.checkerid = checkerid;
+			this.checkerdate = checkerdate;
+			this.checkertime = checkertime;
+			this.checkerip = checkerip;
+			this.approverid = approverid;
+			this.approverdate = approverdate;
+			this.approvertime = approvertime;
+			this.approverip = approverip;
+		}
+
+		@Column(name = "recordid", unique = true, nullable = false)
+		public long getRecordid() {
+			return recordid;
+		}
+
+		public void setRecordid(long recordid) {
+			this.recordid = recordid;
+		}
+
+//		@Column(name = "accntdetailsid", unique = true, nullable = false)
+//		public long getAccntdetailsid() {
+//			return accntdetailsid;
+//		}
+//
+//		public void setAccntdetailsid(long accntdetailsid) {
+//			this.accntdetailsid = accntdetailsid;
+//		}
+
+		@Column(name = "assetbranch", length = 10)
+		public String getAssetbranch() {
+			return assetbranch;
+		}
+
+		public void setAssetbranch(String assetbranch) {
+			this.assetbranch = assetbranch;
+		}
+
+		@Column(name = "assetdepartment", length = 10)
+		public String getAssetdepartment() {
+			return assetdepartment;
+		}
+
+		public void setAssetdepartment(String assetdepartment) {
+			this.assetdepartment = assetdepartment;
+		}
+
+		@Column(name = "categoryid", length = 10)
+		public String getCategoryid() {
+			return categoryid;
+		}
+
+		public void setCategoryid(String categoryid) {
+			this.categoryid = categoryid;
+		}
+
+		@Column(name = "bglidforasset", length = 17)
+		public String getBglidforasset() {
+			return bglidforasset;
+		}
+
+		public void setBglidforasset(String bglidforasset) {
+			this.bglidforasset = bglidforasset;
+		}
+
+		@Column(name = "bglidforloss", length = 17)
+		public String getBglidforloss() {
+			return bglidforloss;
+		}
+
+		public void setBglidforloss(String bglidforloss) {
+			this.bglidforloss = bglidforloss;
+		}
+		
+		@Column(name = "bglidforprofit", length = 17)
+		public String getBglidforprofit() {
+			return bglidforprofit;
+		}
+
+		public void setBglidforprofit(String bglidforprofit) {
+			this.bglidforprofit = bglidforprofit;
+		}
+
+		@Column(name = "bglidfordepreciation", length = 17)
+		public String getBglidfordepreciation() {
+			return bglidfordepreciation;
+		}
+
+		public void setBglidfordepreciation(String bglidfordepreciation) {
+			this.bglidfordepreciation = bglidfordepreciation;
+		}
+
+		@Column(name = "bglidforsuspended", length = 17)
+		public String getBglidforsuspended() {
+			return bglidforsuspended;
+		}
+
+		public void setBglidforsuspended(String bglidforsuspended) {
+			this.bglidforsuspended = bglidforsuspended;
+		}
+
+		@Column(name = "remark", length = 50)
+		public String getRemark() {
+			return remark;
+		}
+
+		public void setRemark(String remark) {
+			this.remark = remark;
+		}
+
+		@Column(name = "extra1", length = 50)
+		public String getExtra1() {
+			return extra1;
+		}
+
+		public void setExtra1(String extra1) {
+			this.extra1 = extra1;
+		}
+
+		@Column(name = "recstatus", length = 1)
+		public String getRecstatus() {
+			return recstatus;
+		}
+
+		public void setRecstatus(String recstatus) {
+			this.recstatus = recstatus;
+		}
+
+		@Column(name = "userlevel", length = 10)
+		public String getUserlevel() {
+			return userlevel;
+		}
+
+		public void setUserlevel(String userlevel) {
+			this.userlevel = userlevel;
+		}
+
+		@Column(name = "rolename", length = 10)
+		public String getRolename() {
+			return rolename;
+		}
+
+		public void setRolename(String rolename) {
+			this.rolename = rolename;
+		}
+
+		@Column(name = "makerid", length = 10)
+		public String getMakerid() {
+			return makerid;
+		}
+
+		public void setMakerid(String makerid) {
+			this.makerid = makerid;
+		}
+
+		@Temporal(TemporalType.DATE)
+		@Column(name = "makerdate", length = 13)
+		public Date getMakerdate() {
+			return makerdate;
+		}
+
+		public void setMakerdate(Date makerdate) {
+			this.makerdate = makerdate;
+		}
+
+		@Column(name = "makertime", length = 8)
+		public String getMakertime() {
+			return makertime;
+		}
+
+		public void setMakertime(String makertime) {
+			this.makertime = makertime;
+		}
+
+		@Column(name = "makerip", length = 15)
+		public String getMakerip() {
+			return makerip;
+		}
+
+		public void setMakerip(String makerip) {
+			this.makerip = makerip;
+		}
+
+		@Column(name = "checkerid", length = 10)
+		public String getCheckerid() {
+			return checkerid;
+		}
+
+		public void setCheckerid(String checkerid) {
+			this.checkerid = checkerid;
+		}
+
+		@Temporal(TemporalType.DATE)
+		@Column(name = "checkerdate", length = 13)
+		public Date getCheckerdate() {
+			return checkerdate;
+		}
+
+		public void setCheckerdate(Date checkerdate) {
+			this.checkerdate = checkerdate;
+		}
+
+		@Column(name = "checkertime", length = 8)
+		public String getCheckertime() {
+			return checkertime;
+		}
+
+		public void setCheckertime(String checkertime) {
+			this.checkertime = checkertime;
+		}
+
+		@Column(name = "checkerip", length = 15)
+		public String getCheckerip() {
+			return checkerip;
+		}
+
+		public void setCheckerip(String checkerip) {
+			this.checkerip = checkerip;
+		}
+
+		@Column(name = "approverid", length = 10)
+		public String getApproverid() {
+			return approverid;
+		}
+
+		public void setApproverid(String approverid) {
+			this.approverid = approverid;
+		}
+
+		@Temporal(TemporalType.DATE)
+		@Column(name = "approverdate", length = 13)
+		public Date getApproverdate() {
+			return approverdate;
+		}
+
+		public void setApproverdate(Date approverdate) {
+			this.approverdate = approverdate;
+		}
+
+		@Column(name = "approvertime", length = 8)
+		public String getApprovertime() {
+			return approvertime;
+		}
+
+		public void setApprovertime(String approvertime) {
+			this.approvertime = approvertime;
+		}
+
+		@Column(name = "approverip", length = 15)
+		public String getApproverip() {
+			return approverip;
+		}
+
+		public void setApproverip(String approverip) {
+			this.approverip = approverip;
+		}
+
+		
+		
+	
+
+
+}
