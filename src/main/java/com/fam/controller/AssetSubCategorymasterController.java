@@ -36,187 +36,213 @@ import com.google.gson.JsonObject;
 @Controller
 public class AssetSubCategorymasterController {
 
-	@Autowired
-	AssetSubCategoryMasterService assetSubCategoryMasterService;
+  @Autowired
+  AssetSubCategoryMasterService assetSubCategoryMasterService;
 
-	@Autowired
-	AssetCategoryMasterService assetCategoryMasterService;
-	
-	@Autowired
-	ParamastService paramastService;
+  @Autowired
+  AssetCategoryMasterService assetCategoryMasterService;
 
-	@GetMapping(value = "/AssetSubCategoryMasterView.htm")
-	public ModelAndView AssetSubCategoryMasterView(HttpServletRequest request, HttpServletResponse response,
-			RedirectAttributes redirectAttributes) throws Exception {
-		ModelAndView mv = new ModelAndView("GeneralMasters/AssetSubCategorymaster");
-		AssetSubCategoryMaster assetSubCategoryMaster = new AssetSubCategoryMaster();
-		Map<String, ?> redirectAttribute = RequestContextUtils.getInputFlashMap(request);
-		String disable = "0", Update = "1";
-		String recordid = "";
-		String Userlevel = request.getSession().getAttribute("userlevel").toString();
-		try {
-			if ((Userlevel.equalsIgnoreCase("6"))) {
-				try {
-					recordid = redirectAttribute.get("recordid").toString();
-				} catch (Exception e) {
-					return mv = new ModelAndView("master/404");
-				}
-			} else if ((Userlevel.equalsIgnoreCase("5"))) {
-				recordid = redirectAttribute.get("recordid").toString();
-			} 
-			if (recordid != null && recordid.length() > 0) {
-				String prev = redirectAttribute.get("prev").toString();
-				String next = redirectAttribute.get("next").toString();
-				String recstatus = redirectAttribute.get("recstatus").toString();
-				if (recstatus.trim().equalsIgnoreCase(RecordStatus.MAKER)
-						|| recstatus.trim().equalsIgnoreCase(RecordStatus.CHECKER)) {
-					disable = "1";
-					Update = "2";
-				} else {
-					disable = "0";
-					Update = "1";
-				}
-				assetSubCategoryMaster = assetSubCategoryMasterService.getAssetSubCategory(Long.parseLong(recordid));
-				mv.addObject("subcategorycode", assetSubCategoryMaster.getSubcategorycode());
-				mv.addObject("recordid", recordid);
-				mv.addObject("categoryid", assetSubCategoryMaster.getCategoryid());
-				mv.addObject("prev", prev);
-				mv.addObject("Update", Update);
-				mv.addObject("next", next);
-				mv.addObject("recstatus", recstatus);
-			}
-		} catch (Exception e) {
-			String code = assetSubCategoryMasterService.getAssetSubCategoryCode();
-			mv.addObject("subcategorycode", code);
-		}
-		
-		List<AssetCategoryMaster> paramastlist = assetCategoryMasterService.getAssetCategorylist("5");
-		mv.addObject("categoryList", paramastlist);
-		mv.addObject("AssetSubcategorymastercommandname",assetSubCategoryMaster);
-		mv.addObject("disable", disable);
-		return mv;
-	}
-	@RequestMapping(value = "/AssetSubCategoryMasterDetail.htm", method = RequestMethod.POST)
-	public @ResponseBody String AssetSubCategoryMasterDetail(@ModelAttribute AssetSubCategoryMaster assetSubCategoryMaster, HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		JsonObject jsonObject = new JsonObject();
-		SimpleDateFormat simpleTimeFormat = new SimpleDateFormat("HH:mm:ss");
-		String userId = request.getSession().getAttribute("userId").toString();
-		String userIp = request.getSession().getAttribute("ip").toString();
-		String update="";
-		try {
-			update = request.getParameter("Update");
-			if (update != null && update.equalsIgnoreCase("1")) {
-				try {
-					assetSubCategoryMaster.setRecstatus(RecordStatus.MAKER);
-					assetSubCategoryMaster.setUserlevel(request.getSession().getAttribute("userlevel").toString());
-					assetSubCategoryMaster.setMakerdate(new Date());
-					assetSubCategoryMaster.setMakertime(simpleTimeFormat.format(new Date()));
-					assetSubCategoryMaster.setMakerid(userId);
-					assetSubCategoryMaster.setMakerip(userIp);					
-					Auditlog auditlog = new Auditlog();
-					auditlog.urlDesc = request.getRequestURL().toString();
-					assetSubCategoryMasterService.updateAssetSubCategory(assetSubCategoryMaster);
-					jsonObject.addProperty("SaveStatus", "1");
-					jsonObject.addProperty("successMsg",Messages.RecordUpdation );
-				} catch (Exception exception) {
-					exception.printStackTrace();
-					jsonObject.addProperty("SaveStatus", "0");
-					jsonObject.addProperty("errorMsg", Messages.RecordUnUpdation);
-				}
-			} else if (update.equalsIgnoreCase("2")) {
-				
-				String Action = request.getParameter("action"), prev = request.getParameter("prev"),
-						next = request.getParameter("next"), recstatus;
-				if (Action.equalsIgnoreCase("Approve")) {
-					recstatus = next;
-				} else {
-					recstatus = prev;
-				}
-				String[] authorizedValue = request.getParameterValues("recordid");
-				List<Long> recordids = new ArrayList<Long>();
-				for (int i = 0; i < authorizedValue.length; i++) {
-					recordids.add(Long.parseLong(authorizedValue[i]));
-				}
-				try {
-					Auditlog auditlog = new Auditlog();
-					auditlog.urlDesc = request.getRequestURL().toString();
-					assetSubCategoryMasterService.updateAssetSubCategory(recordids, recstatus, new Date(),
-							simpleTimeFormat.format(new Date()), userId, userIp,
-							Integer.parseInt(request.getSession().getAttribute("userlevel").toString()));
-					
-					jsonObject.addProperty("SaveStatus", "1");
-					if (Action.equalsIgnoreCase("reject")) {
-						jsonObject.addProperty("successMsg", Messages.RecordRejected);
-					} else if (Action.equalsIgnoreCase("Approve")) {
-						jsonObject.addProperty("successMsg", Messages.RecordApproved);
-					}
-				} catch (Exception e) {
-					jsonObject.addProperty("SaveStatus", "0");
-					jsonObject.addProperty("errorMsg", e.getMessage());
-				}
-			} else {
-				try {
-					System.out.println(assetSubCategoryMaster);
-					assetSubCategoryMaster.setRecstatus(RecordStatus.MAKER);
-					assetSubCategoryMaster.setRolename(request.getSession().getAttribute("role").toString());
-					assetSubCategoryMaster.setUserlevel(request.getSession().getAttribute("userlevel").toString());
-					assetSubCategoryMaster.setMakerdate(new Date());
-					assetSubCategoryMaster.setMakertime(simpleTimeFormat.format(new Date()));
-					assetSubCategoryMaster.setMakerid(userId);
-					assetSubCategoryMaster.setMakerip(userIp);
-					//assetSubCategoryMaster.setSubcategoryid(Long.parseLong(assetSubCategoryMaster.getSubcategorycode()));
-					assetSubCategoryMasterService.insertAssetSubCategory(assetSubCategoryMaster);
-					jsonObject.addProperty("SaveStatus", "1");
-					jsonObject.addProperty("successMsg",Messages.RecordInsertion );
-				} catch (Exception exception) {
-					System.out.println(exception);
-					exception.printStackTrace();
-					jsonObject.addProperty("SaveStatus", "0");
-					jsonObject.addProperty("errorMsg", Messages.RecordUInsertion);
-				}
-			}
-		} catch (Exception e) {
-		}
+  @Autowired
+  ParamastService paramastService;
 
-		return jsonObject.toString();
-	}
+  @GetMapping(value = "/AssetSubCategoryMasterView.htm")
+  public ModelAndView AssetSubCategoryMasterView(HttpServletRequest request, HttpServletResponse response,
+      RedirectAttributes redirectAttributes) throws Exception {
+    ModelAndView mv = new ModelAndView("GeneralMasters/AssetSubCategorymaster");
+    AssetSubCategoryMaster assetSubCategoryMaster = new AssetSubCategoryMaster();
+    Map<String, ?> redirectAttribute = RequestContextUtils.getInputFlashMap(request);
+    String disable = "0", Update = "1";
+    String recordid = "";
+    String Userlevel = request.getSession().getAttribute("userlevel").toString();
+    try {
+      if ((Userlevel.equalsIgnoreCase("6"))) {
+        try {
+          recordid = redirectAttribute.get("recordid").toString();
+        } catch (Exception e) {
+          return mv = new ModelAndView("master/404");
+        }
+      } else if ((Userlevel.equalsIgnoreCase("5"))) {
+        recordid = redirectAttribute.get("recordid").toString();
+      }
+      if (recordid != null && recordid.length() > 0) {
+        String prev = redirectAttribute.get("prev").toString();
+        String next = redirectAttribute.get("next").toString();
+        String recstatus = redirectAttribute.get("recstatus").toString();
+        if (recstatus.trim().equalsIgnoreCase(RecordStatus.MAKER)
+            || recstatus.trim().equalsIgnoreCase(RecordStatus.CHECKER)) {
+          disable = "1";
+          Update = "2";
+        } else {
+          disable = "0";
+          Update = "1";
+        }
+        assetSubCategoryMaster = assetSubCategoryMasterService.getAssetSubCategory(Long.parseLong(recordid));
+        mv.addObject("subcategorycode", assetSubCategoryMaster.getSubcategorycode());
+        mv.addObject("recordid", recordid);
+        mv.addObject("categoryid", assetSubCategoryMaster.getCategoryid());
+        mv.addObject("prev", prev);
+        mv.addObject("Update", Update);
+        mv.addObject("next", next);
+        mv.addObject("recstatus", recstatus);
+      }
+    } catch (Exception e) {
+      String code = assetSubCategoryMasterService.getAssetSubCategoryCode();
+      mv.addObject("subcategorycode", code);
+    }
 
-	@RequestMapping(value = "/UpdateAssetSubCategoryMaster.htm", method = RequestMethod.POST)
-	public RedirectView UpdateAssetSubCategoryMaster(HttpServletRequest request, HttpServletResponse response,
-			RedirectAttributes redirectAttributes) throws Exception {
-		String recordid = request.getParameter("recordid");
-		RedirectView rv = new RedirectView("AssetSubCategoryMasterView.htm");
-		redirectAttributes.addFlashAttribute("recordid", recordid);
-		redirectAttributes.addFlashAttribute("prev", request.getParameter("prev"));
-		redirectAttributes.addFlashAttribute("next", request.getParameter("next"));
-		redirectAttributes.addFlashAttribute("recstatus", request.getParameter("recstatus"));
-		redirectAttributes.addFlashAttribute("Update", request.getParameter("Update"));
-		return rv;
-	}
+    List<AssetCategoryMaster> paramastlist = assetCategoryMasterService.getAssetCategorylist("5");
+    mv.addObject("categoryList", paramastlist);
+    mv.addObject("AssetSubcategorymastercommandname", assetSubCategoryMaster);
+    mv.addObject("disable", disable);
+    return mv;
+  }
 
-	@RequestMapping(value = "/AssetSubCategoryMasterGrid.htm", method = RequestMethod.GET)
-	public RedirectView AssetSubCategorymasterGrid(HttpServletRequest request, HttpServletResponse response,
-			RedirectAttributes redirectAttributes) throws Exception {
-		RedirectView rv = new RedirectView("GridView.htm");
-		redirectAttributes.addFlashAttribute("page", "GeneralMasters/AssetSubCategorymasterGrid");
-		String recstatus = request.getParameter("recstatus");
-		String prev = request.getParameter("prev");
-		String next = request.getParameter("next");
-		String Update = request.getParameter("Update");
-		List<AssetSubCategoryMaster> ls_assetCat=assetSubCategoryMasterService.getAssetSubCategorylist(recstatus);
-		HashMap<String,AssetSubCategoryMaster> um_haHashMap = new HashMap<String, AssetSubCategoryMaster>();
-		ls_assetCat.forEach(assetCat -> um_haHashMap.put(String.valueOf(assetCat.getRecordid()), assetCat));
-		if (ls_assetCat.size() <= 0) {
-			redirectAttributes.addFlashAttribute("msg", "*** No Data Available ****");
-		}
-		Map<String, AssetSubCategoryMaster> map = new TreeMap<String,AssetSubCategoryMaster>(um_haHashMap);
-		redirectAttributes.addFlashAttribute("list_vc", map);
-		redirectAttributes.addFlashAttribute("prev", prev);
-		redirectAttributes.addFlashAttribute("Update", Update);
-		redirectAttributes.addFlashAttribute("next", next);
-		redirectAttributes.addFlashAttribute("recstatus", recstatus);
-		return rv;
-	}
+  @RequestMapping(value = "/AssetSubCategoryMasterDetail.htm", method = RequestMethod.POST)
+  public @ResponseBody String AssetSubCategoryMasterDetail(
+      @ModelAttribute AssetSubCategoryMaster assetSubCategoryMaster, HttpServletRequest request,
+      HttpServletResponse response) throws Exception {
+    JsonObject jsonObject = new JsonObject();
+    SimpleDateFormat simpleTimeFormat = new SimpleDateFormat("HH:mm:ss");
+    String userId = request.getSession().getAttribute("userId").toString();
+    String userIp = request.getSession().getAttribute("ip").toString();
+    String update = "";
+    try {
+      update = request.getParameter("Update");
+      if (update != null && update.equalsIgnoreCase("1")) {
+        try {
+          assetSubCategoryMaster.setRecstatus(RecordStatus.MAKER);
+          assetSubCategoryMaster.setUserlevel(request.getSession().getAttribute("userlevel").toString());
+          assetSubCategoryMaster.setMakerdate(new Date());
+          assetSubCategoryMaster.setMakertime(simpleTimeFormat.format(new Date()));
+          assetSubCategoryMaster.setMakerid(userId);
+          assetSubCategoryMaster.setMakerip(userIp);
+          Auditlog auditlog = new Auditlog();
+          auditlog.urlDesc = request.getRequestURL().toString();
+          assetSubCategoryMasterService.updateAssetSubCategory(assetSubCategoryMaster);
+          jsonObject.addProperty("SaveStatus", "1");
+          jsonObject.addProperty("successMsg", Messages.RecordUpdation);
+        } catch (Exception exception) {
+          exception.printStackTrace();
+          jsonObject.addProperty("SaveStatus", "0");
+          jsonObject.addProperty("errorMsg", Messages.RecordUnUpdation);
+        }
+      } else if (update.equalsIgnoreCase("2")) {
+
+        String Action = request.getParameter("action"), prev = request.getParameter("prev"),
+            next = request.getParameter("next"), recstatus;
+        if (Action.equalsIgnoreCase("Approve")) {
+          recstatus = next;
+        } else {
+          recstatus = prev;
+        }
+        String[] authorizedValue = request.getParameterValues("recordid");
+        List<Long> recordids = new ArrayList<Long>();
+        for (int i = 0; i < authorizedValue.length; i++) {
+          recordids.add(Long.parseLong(authorizedValue[i]));
+        }
+        try {
+          Auditlog auditlog = new Auditlog();
+          auditlog.urlDesc = request.getRequestURL().toString();
+          assetSubCategoryMasterService.updateAssetSubCategory(recordids, recstatus, new Date(),
+              simpleTimeFormat.format(new Date()), userId, userIp,
+              Integer.parseInt(request.getSession().getAttribute("userlevel").toString()));
+
+          jsonObject.addProperty("SaveStatus", "1");
+          if (Action.equalsIgnoreCase("reject")) {
+            jsonObject.addProperty("successMsg", Messages.RecordRejected);
+          } else if (Action.equalsIgnoreCase("Approve")) {
+            jsonObject.addProperty("successMsg", Messages.RecordApproved);
+          }
+        } catch (Exception e) {
+          jsonObject.addProperty("SaveStatus", "0");
+          jsonObject.addProperty("errorMsg", e.getMessage());
+        }
+      } else {
+        try {
+          System.out.println(assetSubCategoryMaster);
+          assetSubCategoryMaster.setRecstatus(RecordStatus.MAKER);
+          assetSubCategoryMaster.setRolename(request.getSession().getAttribute("role").toString());
+          assetSubCategoryMaster.setUserlevel(request.getSession().getAttribute("userlevel").toString());
+          assetSubCategoryMaster.setMakerdate(new Date());
+          assetSubCategoryMaster.setMakertime(simpleTimeFormat.format(new Date()));
+          assetSubCategoryMaster.setMakerid(userId);
+          assetSubCategoryMaster.setMakerip(userIp);
+          // assetSubCategoryMaster.setSubcategoryid(Long.parseLong(assetSubCategoryMaster.getSubcategorycode()));
+          assetSubCategoryMasterService.insertAssetSubCategory(assetSubCategoryMaster);
+          jsonObject.addProperty("SaveStatus", "1");
+          jsonObject.addProperty("successMsg", Messages.RecordInsertion);
+        } catch (Exception exception) {
+          System.out.println(exception);
+          exception.printStackTrace();
+          jsonObject.addProperty("SaveStatus", "0");
+          jsonObject.addProperty("errorMsg", Messages.RecordUInsertion);
+        }
+      }
+    } catch (Exception e) {
+    }
+
+    return jsonObject.toString();
+  }
+
+  @RequestMapping(value = "/UpdateAssetSubCategoryMaster.htm", method = RequestMethod.POST)
+  public RedirectView UpdateAssetSubCategoryMaster(HttpServletRequest request, HttpServletResponse response,
+      RedirectAttributes redirectAttributes) throws Exception {
+    String recordid = request.getParameter("recordid");
+    RedirectView rv = new RedirectView("AssetSubCategoryMasterView.htm");
+    redirectAttributes.addFlashAttribute("recordid", recordid);
+    redirectAttributes.addFlashAttribute("prev", request.getParameter("prev"));
+    redirectAttributes.addFlashAttribute("next", request.getParameter("next"));
+    redirectAttributes.addFlashAttribute("recstatus", request.getParameter("recstatus"));
+    redirectAttributes.addFlashAttribute("Update", request.getParameter("Update"));
+    return rv;
+  }
+
+  @RequestMapping(value = "/AssetSubCategoryMasterGrid.htm", method = RequestMethod.GET)
+  public RedirectView AssetSubCategorymasterGrid(HttpServletRequest request, HttpServletResponse response,
+      RedirectAttributes redirectAttributes) throws Exception {
+    RedirectView rv = new RedirectView("GridView.htm");
+    redirectAttributes.addFlashAttribute("page", "GeneralMasters/AssetSubCategorymasterGrid");
+    String recstatus = request.getParameter("recstatus");
+    String prev = request.getParameter("prev");
+    String next = request.getParameter("next");
+    String Update = request.getParameter("Update");
+    List<AssetSubCategoryMaster> ls_assetCat = assetSubCategoryMasterService.getAssetSubCategorylist(recstatus);
+    HashMap<String, AssetSubCategoryMaster> um_haHashMap = new HashMap<String, AssetSubCategoryMaster>();
+    ls_assetCat.forEach(assetCat -> um_haHashMap.put(String.valueOf(assetCat.getRecordid()), assetCat));
+    if (ls_assetCat.size() <= 0) {
+      redirectAttributes.addFlashAttribute("msg", "*** No Data Available ****");
+    }
+    Map<String, AssetSubCategoryMaster> map = new TreeMap<String, AssetSubCategoryMaster>(um_haHashMap);
+    redirectAttributes.addFlashAttribute("list_vc", map);
+    redirectAttributes.addFlashAttribute("prev", prev);
+    redirectAttributes.addFlashAttribute("Update", Update);
+    redirectAttributes.addFlashAttribute("next", next);
+    redirectAttributes.addFlashAttribute("recstatus", recstatus);
+    return rv;
+  }
+
+  @RequestMapping(value = "/AssetSubCategoryEditGrid.htm", method = RequestMethod.GET)
+  public RedirectView AssetSubCategoryEditGrid(HttpServletRequest request, HttpServletResponse response,
+      RedirectAttributes redirectAttributes) throws Exception {
+    RedirectView rv = new RedirectView("GridView.htm");
+    redirectAttributes.addFlashAttribute("page", "maker/AssetSubCategoryEditGrid");
+    String recstatus = request.getParameter("recstatus");
+    String prev = request.getParameter("prev");
+    String next = request.getParameter("next");
+    String Update = request.getParameter("Update");
+    List<AssetSubCategoryMaster> ls_assetCat = assetSubCategoryMasterService.getAssetSubCategorylist(recstatus);
+    HashMap<String, AssetSubCategoryMaster> um_haHashMap = new HashMap<String, AssetSubCategoryMaster>();
+    ls_assetCat.forEach(assetCat -> um_haHashMap.put(String.valueOf(assetCat.getRecordid()), assetCat));
+    if (ls_assetCat.size() <= 0) {
+      redirectAttributes.addFlashAttribute("msg", "*** No Data Available ****");
+    }
+    Map<String, AssetSubCategoryMaster> map = new TreeMap<String, AssetSubCategoryMaster>(um_haHashMap);
+    redirectAttributes.addFlashAttribute("list_vc", map);
+    redirectAttributes.addFlashAttribute("prev", prev);
+    redirectAttributes.addFlashAttribute("Update", Update);
+    redirectAttributes.addFlashAttribute("next", next);
+    redirectAttributes.addFlashAttribute("recstatus", recstatus);
+    return rv;
+  }
 
 }

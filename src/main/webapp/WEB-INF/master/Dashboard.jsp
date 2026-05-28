@@ -113,44 +113,35 @@
 
 								<div class="row">
                               
-                                    <div class="card" style="width: 14rem;">
-  										<!--  <img src="..." class="card-img-top" alt="...">-->
-  											<div class="card-body">
-   											 <h4 class="card-title font-weight-bold">TOTAL ASSETS</h4>
-    										<p class="card-text">Some quick example .</p>
-    										<a href="#" class="btn btn-primary">View</a>
-  											</div>
-									</div>
-									<div class="col-lg-3 mt-5 mt-md-0">
-										<div class="card" style="width: 14rem;">
-  										<!--  <img src="..." class="card-img-top" alt="...">-->
-  											<div class="card-body">
-   											 <h4 class="card-title font-weight-bold">PO AMOUNT</h4>
-    										<p class="card-text">Some quick example .</p>
-    										<a href="#" class="btn btn-primary">View</a>
-  											</div>
-									</div>
+                                   <div class="card" style="width: 14rem;">
+    <div class="card-body">
+        <h4 class="card-title font-weight-bold">TOTAL ASSETS</h4>
+        <p class="card-text" id="totalAssets">0</p>
+    </div>
+</div>
+
+<div class="card" style="width: 14rem;">
+    <div class="card-body">
+        <h4 class="card-title font-weight-bold">PO AMOUNT</h4>
+        <p class="card-text" id="totalPOAmount">0</p>
+    </div>
+</div>
                                   </div>
                                   <div class="row">
 									
 										<div class="card" style="width: 14rem;">
-  										<!--  <img src="..." class="card-img-top" alt="...">-->
-  											<div class="card-body">
-   											 <h4 class="card-title font-weight-bold">BOOKVALUE</h4>
-    										<p class="card-text">Some quick example .</p>
-    										<a href="#" class="btn btn-primary">View</a>
-  											</div>
-									</div>
+    <div class="card-body">
+        <h4 class="card-title font-weight-bold">BOOK VALUE</h4>
+        <p class="card-text" id="totalBookValue">0</p>
+    </div>
+</div>
 
-									<div class="col-lg-3  mt-5 mt-md-0">
-										<div class="card" style="width: 14rem;">
-  										<!--  <img src="..." class="card-img-top" alt="...">-->
-  											<div class="card-body">
-   											 <h4 class="card-title font-weight-bold">TOTAL DEPRECIATION</h4>
-    										<p class="card-text">Some quick example .</p>
-    										<a href="#" class="btn btn-primary">View</a>
-  											</div>
-									</div>
+<div class="card" style="width: 14rem;">
+    <div class="card-body">
+        <h4 class="card-title font-weight-bold">TOTAL DEPRECIATION</h4>
+        <p class="card-text" id="totalDepreciation">0</p>
+    </div>
+</div>
 									</div>
 
 								</div>
@@ -261,7 +252,15 @@
 		</div>
 		<!-- /.modal-dialog -->
 	</div>
-	<!-- Photo & Sign Model -->
+	<script>
+	$(document).ready(function () {
+
+    $("#gobtn").click(function () {
+        displaydetails();
+    });
+
+});</script>
+ 	<!-- Photo & Sign Model -->
 	<%-- <%@ include file="/WEB-INF/master/views/CommonIncludeFooter.jsp"%> --%>
 	<script src="assets/plugins/jquery/jquery-1.11.1.min.js"
 		type="text/javascript"></script>

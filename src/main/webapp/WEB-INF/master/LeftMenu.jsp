@@ -47,12 +47,35 @@
 								class="icon-thumbnail">OM</span></li>
 							<li class=""><a href="VendorMasterView.htm">Vendor
 									Master</a><span class="icon-thumbnail">VM</span></li>
-									<li class=""><a href="CategoryAccountDetailsView.htm">Category Account Details
-									</a><span class="icon-thumbnail">CD</span></li>
-						</ul></li>
+															</ul></li>
+
 					<li class=""><a href="javascript:;"><span class="title">Edit</span>
 							<span class=" arrow"></span></a> <span class="icon-thumbnail"><i
-							class="pg-tables"></i></span></li>
+							class="pg-tables"></i></span>
+            <ul class="sub-menu">
+							<li class=""><a href="BranchMasterEditGrid.htm?recstatus=<%=RecordStatus.APPROVER%>&prev=&next=<%=RecordStatus.MAKER%>
+								&Update=<%=RecordStatus.UPDATE_EDIT%>">Branch</a><span
+								class="icon-thumbnail">BM</span></li>
+							<li class=""><a href="AssetDepartmentEditGrid.htm?recstatus=<%=RecordStatus.APPROVER%>&prev=&next=<%=RecordStatus.MAKER%>
+								&Update=<%=RecordStatus.UPDATE_EDIT%>">Asset Department</a><span 
+							    class="icon-thumbnail">AD</span></li>
+							<li class=""><a href="AssetCategoryEditGrid.htm?recstatus=<%=RecordStatus.APPROVER%>&prev=&next=<%=RecordStatus.MAKER%>
+								&Update=<%=RecordStatus.UPDATE_EDIT%>">Asset
+									Category</a><span class="icon-thumbnail">AC</span></li>
+							<li class=""><a href="AssetSubCategoryEditGrid.htm?recstatus=<%=RecordStatus.APPROVER%>&prev=&next=<%=RecordStatus.MAKER%>
+								&Update=<%=RecordStatus.UPDATE_EDIT%>">Asset
+									Sub Category </a><span class="icon-thumbnail">ASC</span></li>
+						    <li class=""><a href="CategoryAccountDetailsEditGrid.htm?recstatus=<%=RecordStatus.APPROVER%>&prev=&next=<%=RecordStatus.MAKER%>
+								&Update=<%=RecordStatus.UPDATE_EDIT%>">Category
+									Account Details </a><span class="icon-thumbnail">CD</span></li>
+							<li class=""><a href="BGLEditGrid.htm?recstatus=<%=RecordStatus.APPROVER%>&prev=&next=<%=RecordStatus.MAKER%>
+								&Update=<%=RecordStatus.UPDATE_EDIT%>">BGL</span></li>
+							
+							<li class=""><a href="VendorEditGrid.htm?recstatus=<%=RecordStatus.APPROVER%>&prev=&next=<%=RecordStatus.MAKER%>
+								&Update=<%=RecordStatus.UPDATE_EDIT%>">Vendor
+									Master</a><span class="icon-thumbnail">VM</span></li>
+															</ul></li>
+
 					<li class=""><a href="javascript:;"><span class="title">R.Correction</span>
 							<span class=" arrow"></span></a> <span class="icon-thumbnail"><i
 							class="pg-tables"></i></span>
